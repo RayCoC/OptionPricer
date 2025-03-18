@@ -89,6 +89,8 @@ class OptionPricer:
         print(f"{'Vega':<10} {vega:.4f}")
         print(f"{'Rho':<10} {rho:.4f}")
 
+        plt.plot(delta)
+
         # Visualisation des trajectoires de Heston
         #self.heston_pricer.plot_trajectories(num_simulations=10, num_steps=self.num_steps)
 
@@ -96,6 +98,7 @@ class OptionPricer:
         #self.plot_monte_carlo_histogram()
         self.plot_price_comparison(bs_call_price, mc_call_price, heston_call_price, binomial_call_price, market_call_price,
                               bs_put_price, mc_put_price, heston_put_price, binomial_put_price, market_put_price)
+        
     def plot_monte_carlo_histogram(self):
         """
         Affiche un histogramme des prix finaux simulés par Monte Carlo.
