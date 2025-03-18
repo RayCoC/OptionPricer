@@ -3,37 +3,43 @@ from models.monte_carlo_pricer import MonteCarloPricer
 from models.black_scholes_pricer import BlackScholesPricer
 from data.market_data import MarketData
 from models.greek_calculator import GreekCalculator
+from models.binomial_tree_pricer import BinomialTreePricer
 
 class OptionPricer:
-    def __init__(self, option, stock_data, num_simulations=10000):
+    def __init__(self, option, stock_data, num_simulations=10000, num_steps=100):
         """
         Initialise le pricer d'options.
 
         :param option: L'option à pricer (classe Option).
         :param stock_data: Les données de l'actif sous-jacent (classe StockData).
         :param num_simulations: Nombre de simulations pour la méthode Monte Carlo (par défaut 10 000).
+        :param num_steps: Nombre de pas de temps pour l'arbre binomial (par défaut 100).
         """
         self.option = option
         self.stock_data = stock_data
         self.num_simulations = num_simulations
+        self.num_steps = num_steps
         self.monte_carlo_pricer = MonteCarloPricer(option, stock_data, num_simulations)
         self.black_scholes_pricer = BlackScholesPricer(option, stock_data)
+        self.binomial_tree_pricer = BinomialTreePricer(option, stock_data, num_steps)  # Ajoutez cette ligne
         self.market_data = MarketData(option)
         self.greek_calculator = GreekCalculator(option, stock_data)
 
     def compare_prices(self):
         """
-        Compare les prix des options (call et put) calculés par Monte Carlo, Black-Scholes et le marché.
+        Compare les prix des options (call et put) calculés par Monte Carlo, Black-Scholes, l'arbre binomial et le marché.
         Affiche également les grecques.
         """
         # Calcul des prix pour les calls
         mc_call_price = self.monte_carlo_pricer.price_call()
         bs_call_price = self.black_scholes_pricer.price_call()
+        bt_call_price = self.binomial_tree_pricer.price_call()  # Ajoutez cette ligne
         market_call_price = self.market_data.get_market_price(call=True)
 
         # Calcul des prix pour les puts
         mc_put_price = self.monte_carlo_pricer.price_put()
         bs_put_price = self.black_scholes_pricer.price_put()
+        bt_put_price = self.binomial_tree_pricer.price_put()  # Ajoutez cette ligne
         market_put_price = self.market_data.get_market_price(call=False)
 
         # Calcul des grecques
@@ -53,6 +59,7 @@ class OptionPricer:
             print(f"{'Market':<15} ${market_call_price:>9.2f}")
         print(f"{'Monte Carlo':<20} {mc_call_price:>9.2f} $")
         print(f"{'Black-Scholes':<20} {bs_call_price:>9.2f} $")
+        print(f"{'Binomial Tree':<20} {bt_call_price:>9.2f} $")  # Ajoutez cette ligne
 
         # Résultats pour les puts
         print(f"\nPricing Results for Puts:")
@@ -62,6 +69,7 @@ class OptionPricer:
             print(f"{'Market':<15} ${market_put_price:>9.2f}")
         print(f"{'Monte Carlo':<20} {mc_put_price:>9.2f} $")
         print(f"{'Black-Scholes':<20} {bs_put_price:>9.2f} $")
+        print(f"{'Binomial Tree':<20} {bt_put_price:>9.2f} $")  # Ajoutez cette ligne
 
         # Affichage des grecques
         print(f"\nGreeks:")
@@ -72,29 +80,24 @@ class OptionPricer:
         print(f"{'Rho':<10} {rho:.4f}")
 
         # Visualisation des résultats
-        self.plot_price_comparison(mc_call_price, bs_call_price, market_call_price, mc_put_price, bs_put_price, market_put_price)
+        self.plot_price_comparison(mc_call_price, bs_call_price, bt_call_price, market_call_price,
+                                  mc_put_price, bs_put_price, bt_put_price, market_put_price)
 
-    def plot_price_comparison(self, mc_call_price, bs_call_price, market_call_price, mc_put_price, bs_put_price, market_put_price):
+    def plot_price_comparison(self, mc_call_price, bs_call_price, bt_call_price, market_call_price,
+                          mc_put_price, bs_put_price, bt_put_price, market_put_price):
         """
-        Affiche un graphique comparant les prix des options (call et put) calculés par Monte Carlo, Black-Scholes et le marché.
-
-        :param mc_call_price: Prix du call calculé par Monte Carlo.
-        :param bs_call_price: Prix du call calculé par Black-Scholes.
-        :param market_call_price: Prix du call sur le marché.
-        :param mc_put_price: Prix du put calculé par Monte Carlo.
-        :param bs_put_price: Prix du put calculé par Black-Scholes.
-        :param market_put_price: Prix du put sur le marché.
+        Affiche un graphique comparant les prix des options (call et put) calculés par Monte Carlo, Black-Scholes, l'arbre binomial et le marché.
         """
         # Données pour les calls
-        call_methods = ['Monte Carlo', 'Black-Scholes']
-        call_prices = [mc_call_price, bs_call_price]
+        call_methods = ['Monte Carlo', 'Black-Scholes', 'Binomial Tree']
+        call_prices = [mc_call_price, bs_call_price, bt_call_price]
         if market_call_price is not None:
             call_methods.insert(0, 'Market')
             call_prices.insert(0, market_call_price)
 
         # Données pour les puts
-        put_methods = ['Monte Carlo', 'Black-Scholes']
-        put_prices = [mc_put_price, bs_put_price]
+        put_methods = ['Monte Carlo', 'Black-Scholes', 'Binomial Tree']
+        put_prices = [mc_put_price, bs_put_price, bt_put_price]
         if market_put_price is not None:
             put_methods.insert(0, 'Market')
             put_prices.insert(0, market_put_price)
