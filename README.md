@@ -7,14 +7,11 @@ Ce projet permet de calculer le prix d'une option financière en utilisant deux 
 ## Table des matières
 
 1. [Fonctionnalités](#fonctionnalités)
-2. [Structure du projet](#structure-du-projet)
-3. [Théorie et calculs](#théorie-et-calculs)
+2. [Théorie et calculs](#théorie-et-calculs)
    - [Modèle de Black-Scholes](#modèle-de-black-scholes)
    - [Simulation de Monte Carlo](#simulation-de-monte-carlo)
    - [Calcul des grecques](#calcul-des-grecques)
-4. [Installation](#installation)
-5. [Utilisation](#utilisation)
-6. [Licence](#licence)
+3. [Utilisation](#utilisation)
 
 ---
 
@@ -31,31 +28,6 @@ Ce projet permet de calculer le prix d'une option financière en utilisant deux 
 
 ---
 
-## Structure du projet
-
-├── src/
-│ ├── init.py
-│ ├── main.py
-│ ├── data/
-│ │ ├── init.py
-│ │ ├── stock_data.py
-│ │ └── market_data.py
-│ ├── models/
-│ │ ├── init.py
-│ │ ├── option.py
-│ │ ├── monte_carlo_pricer.py
-│ │ ├── black_scholes_pricer.py
-│ │ └── greek_calculator.py
-│ └── services/
-│ ├── init.py
-│ └── option_pricer.py
-├── requirements.txt
-├── README.md
-└── .gitignore
-
-
----
-
 ## Théorie et calculs
 
 ### Modèle de Black-Scholes
@@ -67,13 +39,13 @@ C = S_0 N(d_1) - K e^{-rT} N(d_2)
 $$
 
 Où :
-- \( C \) : Prix de l'option d'achat.
-- \( S_0 \) : Prix actuel de l'actif sous-jacent.
-- \( K \) : Prix d'exercice de l'option.
-- \( r \) : Taux d'intérêt sans risque.
-- \( T \) : Temps jusqu'à l'expiration de l'option.
-- \( N(\cdot) \) : Fonction de répartition de la loi normale centrée réduite.
-- \( d_1 \) et \( d_2 \) sont donnés par :
+- $C$ : Prix de l'option d'achat.
+- $S_0$ : Prix actuel de l'actif sous-jacent.
+- $K$ : Prix d'exercice de l'option.
+- $r$ : Taux d'intérêt sans risque.
+- $T$ : Temps jusqu'à l'expiration de l'option.
+- $N(\cdot)$ : Fonction de répartition de la loi normale centrée réduite.
+- $d_1$ et $d_2$ sont donnés par :
 
 $$
 d_1 = \frac{\ln(S_0 / K) + (r + \sigma^2 / 2) T}{\sigma \sqrt{T}}
@@ -82,7 +54,7 @@ $$
 d_2 = d_1 - \sigma \sqrt{T}
 $$
 
-Où \( \sigma \) est la volatilité de l'actif sous-jacent.
+Où $\sigma$ est la volatilité de l'actif sous-jacent.
 
 ---
 
@@ -95,7 +67,7 @@ La simulation de Monte Carlo est une méthode numérique pour estimer le prix d'
      $$
      S_t = S_0 \exp\left( \left(r - \frac{\sigma^2}{2}\right) t + \sigma \sqrt{t} Z \right)
      $$
-     Où \( Z \) est une variable aléatoire normale standard.
+     Où $Z$ est une variable aléatoire normale standard.
 
 2. **Calculer le payoff** :
    - Pour chaque trajectoire, calculer le payoff de l'option à l'expiration :
@@ -144,3 +116,11 @@ Les grecques mesurent la sensibilité du prix de l'option à différents facteur
   \rho = K T e^{-rT} N(d_2)
   $$
   Mesure la sensibilité du prix de l'option par rapport au taux d'intérêt.
+
+---
+
+## Utilisation
+
+Exécutez le programme principal :
+```bash
+python src/main.py
