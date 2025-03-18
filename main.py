@@ -7,7 +7,7 @@ if __name__ == "__main__":
     ticker = "AAPL"
     strike_price = 180
     risk_free_rate = 0.05
-    num_simulations = 10000
+    num_simulations = 1000
 
     # Récupération des données de l'action
     stock_data = StockData(ticker)
@@ -19,4 +19,4 @@ if __name__ == "__main__":
     pricer = OptionPricer(option, stock_data, num_simulations)
 
     # Comparaison des prix et calcul des grecques
-    mc_price, bs_price, market_price, delta, gamma, theta, vega, rho = pricer.compare_prices()
+    pricer.compare_prices()

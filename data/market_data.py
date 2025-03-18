@@ -4,8 +4,12 @@ class MarketData:
     def __init__(self, option):
         self.option = option
 
-    def get_market_price(self):
+    def get_market_price(self, call=True):
         options = yf.Ticker(self.option.ticker).option_chain(self.option.maturity_date)
-        calls = options.calls
-        closest_strike_idx = (calls['strike'] - self.option.strike_price).abs().idxmin()
-        return calls.iloc[closest_strike_idx]['lastPrice']
+        if call:
+            option_type = options.calls
+        else:
+            option_type = options.puts
+
+        closest_strike_idx = (option_type['strike'] - self.option.strike_price).abs().idxmin()
+        return option_type.iloc[closest_strike_idx]['lastPrice']
