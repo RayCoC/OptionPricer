@@ -4,5 +4,7 @@ Ce projet permet de calculer le prix d'une option financière en utilisant deux 
 
 Pour la partie théorique, vous pouvez ouvrir le fichier Report.ioynb
 
+[📄 Voir le Notebook Report.ipynb](Report.ipynb)
+
 # Résultat du Pricing
 ![Résultat du pricing](Img/Option%20Pricer%20Comparaison.png)
