@@ -6,5 +6,5 @@ Pour la partie théorique, vous pouvez ouvrir le fichier Report.ioynb
 
 [📄 Voir le Notebook Report.ipynb](Report.ipynb)
 
-# Résultat du Pricing
+# Résultat du Pricing (1k simulations MC)
 ![Résultat du pricing](Img/Option%20Pricer%20Comparaison.png)
