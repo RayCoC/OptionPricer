@@ -7,7 +7,7 @@ if __name__ == "__main__":
     ticker = "AAPL"
     strike_price = 180
     risk_free_rate = 0.05
-    num_simulations = 1000
+    num_simulations = 10000
 
     # Récupération des données de l'action
     stock_data = StockData(ticker)

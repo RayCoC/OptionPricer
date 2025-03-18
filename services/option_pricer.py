@@ -1,45 +1,53 @@
+import numpy as np
 import matplotlib.pyplot as plt
-from models.monte_carlo_pricer import MonteCarloPricer
+from models import monte_carlo_pricer
 from models.black_scholes_pricer import BlackScholesPricer
+from models.monte_carlo_pricer import MonteCarloPricer
+from models.heston_pricer import HestonPricer
+from models.binomial_tree_pricer import BinomialTreePricer
 from data.market_data import MarketData
 from models.greek_calculator import GreekCalculator
-from models.binomial_tree_pricer import BinomialTreePricer
 
 class OptionPricer:
-    def __init__(self, option, stock_data, num_simulations=10000, num_steps=100):
+    def __init__(self, option, stock_data, num_simulations=10000, num_steps=252):
         """
         Initialise le pricer d'options.
 
         :param option: L'option à pricer (classe Option).
         :param stock_data: Les données de l'actif sous-jacent (classe StockData).
-        :param num_simulations: Nombre de simulations pour la méthode Monte Carlo (par défaut 10 000).
-        :param num_steps: Nombre de pas de temps pour l'arbre binomial (par défaut 100).
+        :param num_simulations: Nombre de simulations pour Monte Carlo (par défaut 10 000).
+        :param num_steps: Nombre de pas de temps pour les simulations (par défaut 252).
         """
         self.option = option
         self.stock_data = stock_data
         self.num_simulations = num_simulations
         self.num_steps = num_steps
-        self.monte_carlo_pricer = MonteCarloPricer(option, stock_data, num_simulations)
+
+        # Initialisation des pricers
         self.black_scholes_pricer = BlackScholesPricer(option, stock_data)
-        self.binomial_tree_pricer = BinomialTreePricer(option, stock_data, num_steps)  # Ajoutez cette ligne
+        self.monte_carlo_pricer = MonteCarloPricer(option, stock_data, num_simulations)
+        self.heston_pricer = HestonPricer(option, stock_data, kappa=2.0, theta=0.04, xi=0.1, rho=-0.7, v0=0.04)
+        self.binomial_tree_pricer = BinomialTreePricer(option, stock_data, num_steps) 
         self.market_data = MarketData(option)
         self.greek_calculator = GreekCalculator(option, stock_data)
 
     def compare_prices(self):
         """
-        Compare les prix des options (call et put) calculés par Monte Carlo, Black-Scholes, l'arbre binomial et le marché.
-        Affiche également les grecques.
+        Compare les prix des options (call et put) calculés par Black-Scholes, Monte Carlo, Heston, Binomial Tree et le marché.
+        Affiche également les grecques, les trajectoires de Heston et un histogramme des prix finaux.
         """
         # Calcul des prix pour les calls
-        mc_call_price = self.monte_carlo_pricer.price_call()
         bs_call_price = self.black_scholes_pricer.price_call()
-        bt_call_price = self.binomial_tree_pricer.price_call()  # Ajoutez cette ligne
+        mc_call_price = self.monte_carlo_pricer.price_call()
+        heston_call_price = self.heston_pricer.price_call(self.num_simulations, self.num_steps)
+        binomial_call_price = self.binomial_tree_pricer.price_call()
         market_call_price = self.market_data.get_market_price(call=True)
 
         # Calcul des prix pour les puts
-        mc_put_price = self.monte_carlo_pricer.price_put()
         bs_put_price = self.black_scholes_pricer.price_put()
-        bt_put_price = self.binomial_tree_pricer.price_put()  # Ajoutez cette ligne
+        mc_put_price = self.monte_carlo_pricer.price_put()
+        heston_put_price = self.heston_pricer.price_put(self.num_simulations, self.num_steps)
+        binomial_put_price = self.binomial_tree_pricer.price_put()
         market_put_price = self.market_data.get_market_price(call=False)
 
         # Calcul des grecques
@@ -57,9 +65,10 @@ class OptionPricer:
         print("-" * 30)
         if market_call_price is not None:
             print(f"{'Market':<15} ${market_call_price:>9.2f}")
-        print(f"{'Monte Carlo':<20} {mc_call_price:>9.2f} $")
         print(f"{'Black-Scholes':<20} {bs_call_price:>9.2f} $")
-        print(f"{'Binomial Tree':<20} {bt_call_price:>9.2f} $")  # Ajoutez cette ligne
+        print(f"{'Monte Carlo':<20} {mc_call_price:>9.2f} $")
+        print(f"{'Heston':<20} {heston_call_price:>9.2f} $")
+        print(f"{'Binomial Tree':<20} {binomial_call_price:>9.2f} $")
 
         # Résultats pour les puts
         print(f"\nPricing Results for Puts:")
@@ -67,9 +76,10 @@ class OptionPricer:
         print("-" * 30)
         if market_put_price is not None:
             print(f"{'Market':<15} ${market_put_price:>9.2f}")
-        print(f"{'Monte Carlo':<20} {mc_put_price:>9.2f} $")
         print(f"{'Black-Scholes':<20} {bs_put_price:>9.2f} $")
-        print(f"{'Binomial Tree':<20} {bt_put_price:>9.2f} $")  # Ajoutez cette ligne
+        print(f"{'Monte Carlo':<20} {mc_put_price:>9.2f} $")
+        print(f"{'Heston':<20} {heston_put_price:>9.2f} $")
+        print(f"{'Binomial Tree':<20} {binomial_put_price:>9.2f} $")
 
         # Affichage des grecques
         print(f"\nGreeks:")
@@ -79,25 +89,50 @@ class OptionPricer:
         print(f"{'Vega':<10} {vega:.4f}")
         print(f"{'Rho':<10} {rho:.4f}")
 
-        # Visualisation des résultats
-        self.plot_price_comparison(mc_call_price, bs_call_price, bt_call_price, market_call_price,
-                                  mc_put_price, bs_put_price, bt_put_price, market_put_price)
+        # Visualisation des trajectoires de Heston
+        #self.heston_pricer.plot_trajectories(num_simulations=10, num_steps=self.num_steps)
 
-    def plot_price_comparison(self, mc_call_price, bs_call_price, bt_call_price, market_call_price,
-                          mc_put_price, bs_put_price, bt_put_price, market_put_price):
+        # Histogramme des prix finaux simulés par Monte Carlo
+        #self.plot_monte_carlo_histogram()
+        self.plot_price_comparison(bs_call_price, mc_call_price, heston_call_price, binomial_call_price, market_call_price,
+                              bs_put_price, mc_put_price, heston_put_price, binomial_put_price, market_put_price)
+    def plot_monte_carlo_histogram(self):
         """
-        Affiche un graphique comparant les prix des options (call et put) calculés par Monte Carlo, Black-Scholes, l'arbre binomial et le marché.
+        Affiche un histogramme des prix finaux simulés par Monte Carlo.
+        """
+        current_price = self.stock_data.current_price
+        volatility = self.stock_data.volatility
+        risk_free_rate = self.option.risk_free_rate
+        time_to_maturity = self.option.time_to_maturity
+        
+        paths = monte_carlo_pricer.generate_random_walks(current_price, volatility, risk_free_rate, time_to_maturity, self.num_simulations)
+        final_prices = paths[:, -1]
+
+        plt.figure(figsize=(10, 6))
+        plt.hist(final_prices, bins=50, alpha=0.75, color='blue', edgecolor='black')
+        plt.title(f'Distribution des Prix Finaux (Monte Carlo) - {self.option.ticker}')
+        plt.xlabel('Prix Final ($)')
+        plt.ylabel('Fréquence')
+        plt.grid(True, alpha=0.3)
+        plt.axvline(self.option.strike_price, color='red', linestyle='dashed', linewidth=2, label='Strike Price')
+        plt.legend()
+        plt.show()
+
+    def plot_price_comparison(self, bs_call_price, mc_call_price, heston_call_price, binomial_call_price, market_call_price,
+                              bs_put_price, mc_put_price, heston_put_price, binomial_put_price, market_put_price):
+        """
+        Affiche un graphique comparant les prix des options (call et put) calculés par Black-Scholes, Monte Carlo, Heston, Binomial Tree et le marché.
         """
         # Données pour les calls
-        call_methods = ['Monte Carlo', 'Black-Scholes', 'Binomial Tree']
-        call_prices = [mc_call_price, bs_call_price, bt_call_price]
+        call_methods = ['Black-Scholes', 'Monte Carlo', 'Heston', 'Binomial Tree']
+        call_prices = [bs_call_price, mc_call_price, heston_call_price, binomial_call_price]
         if market_call_price is not None:
             call_methods.insert(0, 'Market')
             call_prices.insert(0, market_call_price)
 
         # Données pour les puts
-        put_methods = ['Monte Carlo', 'Black-Scholes', 'Binomial Tree']
-        put_prices = [mc_put_price, bs_put_price, bt_put_price]
+        put_methods = ['Black-Scholes', 'Monte Carlo', 'Heston', 'Binomial Tree']
+        put_prices = [bs_put_price, mc_put_price, heston_put_price, binomial_put_price]
         if market_put_price is not None:
             put_methods.insert(0, 'Market')
             put_prices.insert(0, market_put_price)
